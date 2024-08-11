@@ -54,6 +54,8 @@
         <select id="shape">
             <option value="rectangle">Rectángulo</option>
             <option value="circle">Círculo</option>
+            <option value="triangle">Triángulo</option>
+            <option value="star">Estrella</option>
         </select>
 
         <label for="scale">Escala:</label>
@@ -62,66 +64,74 @@
         <label for="rotation">Rotación (grados):</label>
         <input type="number" id="rotation" value="0" step="5">
 
+        <label for="fillColor">Color de relleno:</label>
+        <input type="color" id="fillColor" value="#00ff00">
+
+        <label for="strokeColor">Color del trazo:</label>
+        <input type="color" id="strokeColor" value="#000000">
+
         <button id="clear">Limpiar Canvas</button>
     </div>
 
     <canvas id="canvas" width="800" height="600"></canvas>
 
     <script>
-        // Obtener referencias a los elementos
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const shapeSelect = document.getElementById('shape');
         const scaleInput = document.getElementById('scale');
         const rotationInput = document.getElementById('rotation');
+        const fillColorInput = document.getElementById('fillColor');
+        const strokeColorInput = document.getElementById('strokeColor');
         const clearButton = document.getElementById('clear');
 
         let currentShape = 'rectangle';
         let shapes = [];
 
-        // Manejar la selección de formas
         shapeSelect.addEventListener('change', (e) => {
             currentShape = e.target.value;
         });
 
-        // Manejar el clic en el canvas para dibujar formas
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
 
             const scale = parseFloat(scaleInput.value);
-            const rotation = parseFloat(rotationInput.value) * (Math.PI / 180); // Convertir a radianes
+            const rotation = parseFloat(rotationInput.value) * (Math.PI / 180);
+            const fillColor = fillColorInput.value;
+            const strokeColor = strokeColorInput.value;
 
-            let shape = { type: currentShape, x, y, scale, rotation };
+            let shape = { type: currentShape, x, y, scale, rotation, fillColor, strokeColor };
 
             if (currentShape === 'rectangle') {
                 shape.width = 100;
                 shape.height = 50;
             } else if (currentShape === 'circle') {
                 shape.radius = 50;
+            } else if (currentShape === 'triangle') {
+                shape.size = 100;
+            } else if (currentShape === 'star') {
+                shape.size = 100;
+                shape.points = 5;
             }
 
             shapes.push(shape);
             drawShapes();
         });
 
-        // Función para aplicar traslación
         function traslacion(shape) {
             ctx.translate(shape.x, shape.y);
         }
 
-        // Función para aplicar escalado
         function escalado(shape) {
             ctx.scale(shape.scale, shape.scale);
         }
 
-        // Función para aplicar rotación
         function rotacion(shape) {
             ctx.rotate(shape.rotation);
         }
 
-        // Función para dibujar un rectángulo con primitivas
         function dibujarRectangulo(width, height) {
             ctx.beginPath();
             ctx.moveTo(-width / 2, -height / 2);
@@ -133,7 +143,6 @@
             ctx.stroke();
         }
 
-        // Función para dibujar un círculo con primitivas
         function dibujarCirculo(radius) {
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
@@ -141,30 +150,59 @@
             ctx.stroke();
         }
 
-        // Función para dibujar todas las formas en el canvas
+        function dibujarTriangulo(size) {
+            ctx.beginPath();
+            ctx.moveTo(0, -size / 2);
+            ctx.lineTo(size / 2, size / 2);
+            ctx.lineTo(-size / 2, size / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function dibujarEstrella(size, points) {
+            const outerRadius = size / 2;
+            const innerRadius = size / 4;
+            const angle = Math.PI / points;
+
+            ctx.beginPath();
+            for (let i = 0; i < 2 * points; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const x = radius * Math.sin(i * angle);
+                const y = -radius * Math.cos(i * angle);
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
         function drawShapes() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             shapes.forEach((shape) => {
-                ctx.save(); // Guardar el estado actual del contexto
+                ctx.save();
 
                 traslacion(shape);
                 rotacion(shape);
                 escalado(shape);
 
-                ctx.fillStyle = 'rgba(0, 100, 255, 0.3)';
-                ctx.strokeStyle = 'black';
+                ctx.fillStyle = shape.fillColor;
+                ctx.strokeStyle = shape.strokeColor;
 
                 if (shape.type === 'rectangle') {
                     dibujarRectangulo(shape.width, shape.height);
                 } else if (shape.type === 'circle') {
                     dibujarCirculo(shape.radius);
+                } else if (shape.type === 'triangle') {
+                    dibujarTriangulo(shape.size);
+                } else if (shape.type === 'star') {
+                    dibujarEstrella(shape.size, shape.points);
                 }
 
-                ctx.restore(); // Restaurar el estado del contexto
+                ctx.restore();
             });
         }
 
-        // Manejar el botón de limpiar
         clearButton.addEventListener('click', () => {
             shapes = [];
             drawShapes();
@@ -172,3 +210,5 @@
     </script>
 </body>
 </html>
+
+
