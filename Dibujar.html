@@ -3,23 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Canvas</title>
+    <title>Primitivas</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+        }
+        #header {
+            text-align: center;
+            margin-bottom: 20px;
         }
         #controls {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            margin-bottom: 20px;
+            justify-content: space-around;
+            margin-bottom: 40px !important;
             padding: 10px;
             background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 1200px; /* Ampliado para extender la barra de herramientas */
+            margin: 0 auto;
         }
         #controls label, #controls select, #controls input, #controls button {
             margin: 5px 10px;
@@ -67,9 +74,29 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
+        #bottomControls {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px !important;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        #bottomControls div {
+            margin: 0 10px;
+        }
+        #bottomControls button {
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
+    <div id="header">
+        <h1>Primitivas</h1>
+    </div>
     <div id="controls">
         <label for="shape">Selecciona una forma:</label>
         <select id="shape">
@@ -90,7 +117,11 @@
 
         <label for="strokeColor">Color del trazo:</label>
         <input type="color" id="strokeColor" value="#000000">
+    </div>
 
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <div id="bottomControls">
         <button id="clear">Limpiar Canvas</button>
         <button id="eraser">Borrador</button>
         <button id="select">Seleccionar</button>
@@ -102,9 +133,16 @@
             <label for="moveY">Mover Y:</label>
             <input type="number" id="moveY" value="0" step="1">
         </div>
-    </div>
 
-    <canvas id="canvas" width="800" height="600"></canvas>
+        <!-- Nuevas herramientas de escalar y rotar -->
+        <div id="scaleRotateControls">
+            <label for="scaleBottom">Escalar:</label>
+            <input type="number" id="scaleBottom" value="1" step="0.1" min="0.1">
+
+            <label for="rotationBottom">Rotación (grados):</label>
+            <input type="number" id="rotationBottom" value="0" step="5">
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -119,6 +157,8 @@
         const selectButton = document.getElementById('select');
         const moveXInput = document.getElementById('moveX');
         const moveYInput = document.getElementById('moveY');
+        const scaleBottomInput = document.getElementById('scaleBottom');
+        const rotationBottomInput = document.getElementById('rotationBottom');
 
         let currentShape = 'rectangle';
         let shapes = [];
@@ -238,6 +278,8 @@
             if (selectedShape) {
                 moveXInput.value = selectedShape.x;
                 moveYInput.value = selectedShape.y;
+                scaleBottomInput.value = selectedShape.scale;
+                rotationBottomInput.value = selectedShape.rotation * (180 / Math.PI);
             }
         }
 
@@ -247,6 +289,22 @@
                 selectedShape.y = y;
                 moveXInput.value = x;
                 moveYInput.value = y;
+                drawShapes();
+            }
+        }
+
+        function scaleSelectedShape(scale) {
+            if (selectedShape) {
+                selectedShape.scale = scale;
+                scaleBottomInput.value = scale;
+                drawShapes();
+            }
+        }
+
+        function rotateSelectedShape(rotation) {
+            if (selectedShape) {
+                selectedShape.rotation = rotation * (Math.PI / 180);
+                rotationBottomInput.value = rotation;
                 drawShapes();
             }
         }
@@ -295,7 +353,7 @@
             const y = e.clientY - rect.top;
 
             if (isEraserMode) {
-                canvas.style.cursor = `url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><rect width="20" height="20" fill="%23d9534f" fill-opacity="0.3" stroke="%23d9534f" stroke-width="2" /></svg>') 10 10, auto`;
+                canvas.style.cursor = 'url("data:image/svg+xml;charset=utf-8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'20\' height=\'20\' viewBox=\'0 0 20 20\'><rect width=\'20\' height=\'20\' fill=\'%23d9534f\' fill-opacity=\'0.3\' stroke=\'%23d9534f\' stroke-width=\'2\' /></svg>") 10 10, auto';
             } else if (isSelectMode) {
                 canvas.style.cursor = 'move';
             } else {
@@ -374,13 +432,17 @@
             }
         });
 
+        scaleBottomInput.addEventListener('input', () => {
+            scaleSelectedShape(parseFloat(scaleBottomInput.value));
+        });
+
+        rotationBottomInput.addEventListener('input', () => {
+            rotateSelectedShape(parseFloat(rotationBottomInput.value));
+        });
+
         shapeSelect.addEventListener('change', () => {
             currentShape = shapeSelect.value;
         });
     </script>
 </body>
 </html>
-
-
-
-
